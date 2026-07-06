@@ -2,12 +2,20 @@ import pygame
 import random
 import heapq
 import sys
+import os
+
+# ==========================================
+# บังคับให้หน้าต่างเกมเปิดขึ้นมาที่ตำแหน่งพิกัด (50, 50) ของหน้าจอ
+# เพื่อป้องกันไม่ให้แถบด้านบนทะลุขอบจอจนลากไม่ได้
+# ==========================================
+os.environ['SDL_VIDEO_WINDOW_POS'] = "50,50" 
 
 # ==========================================
 # 1. ตั้งค่าพื้นฐานของเกม
 # ==========================================
 CELLS_X, CELLS_Y = 30, 30
-CELL_SIZE = 16  # 16x16 pixels แทน 16x16 cm ต่อ 1 ช่อง
+# ปรับขนาดช่องให้เล็กลงอีก เพื่อให้หน้าต่างแสดงผลได้ครบถ้วน ไม่โดนตัดขอบล่าง
+CELL_SIZE = 10  
 
 # ใช้กริดแบบ maze จริง: ช่องเดินอยู่ที่ index คี่
 GRID_X, GRID_Y = CELLS_X * 2 + 1, CELLS_Y * 2 + 1
@@ -107,8 +115,9 @@ def solve_maze(grid, start, goal):
 # 4. เริ่มต้น Pygame
 # ==========================================
 pygame.init()
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Smart Mouse Maze - Auto Solve (No Guide)")
+# เพิ่ม pygame.RESIZABLE ให้หน้าต่างปรับเปลี่ยนและเคลื่อนย้ายได้
+screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
+pygame.display.set_caption("Smart Mouse Maze - Auto Solve (Movable Window)")
 font = pygame.font.SysFont("arial", 24, bold=True)
 small_font = pygame.font.SysFont("arial", 18, bold=True)
 big_font = pygame.font.SysFont("arial", 48, bold=True)
@@ -137,7 +146,6 @@ game_state = "PLAYING"  # PLAYING, WIN, GAMEOVER
 path, think_count = solve_maze(maze_grid, tuple(player_pos), tuple(goal_pos))
 
 # เงื่อนไข "คิดไม่น้อยกว่า 5 ครั้ง"
-# ในที่นี้ใช้จำนวนการขยายโหนดของ A* เป็นจำนวนครั้งที่คิด
 if think_count < 5:
     think_count = 5
 
@@ -154,6 +162,9 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
+        # อัปเดตขนาดจอหากผู้ใช้จับขอบยืดหด
+        elif event.type == pygame.VIDEORESIZE:
+            screen = pygame.display.set_mode((event.w, event.h), pygame.RESIZABLE)
 
     # --------------------------------------
     # คำนวณเวลา
